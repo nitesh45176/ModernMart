@@ -49,25 +49,43 @@ export const useCartStore = create((set, get) => ({
       set({cart:[], coupon:null, total:0, subtotal:0, isCouponApplied:false});
     },
 addToCart: async (product) => {
-	console.log("🛒 addToCart() store called", product);
-	try {
-		await axiosInstance.post("/cart", { productId: product._id });
-		toast.success("Product added to cart");
+    console.log("🛒 addToCart() store called", product);
+    try {
+        await axiosInstance.post("/cart", { productId: product._id });
+        toast.success("Product added to cart");
 
-		set((prevState) => {
-			const existingItem = prevState.cart.find((item) => item._id === product._id);
-			const newCart = existingItem
-				? prevState.cart.map((item) =>
-						item._id === product._id ? { ...item, quantity: item.quantity + 1 } : item
-				  )
-				: [...prevState.cart, { ...product, quantity: 1 }];
-			return { cart: newCart };
-		});
-		get().calculateTotals();
-	} catch (error) {
-		console.log("❌ Error in useCartStore addToCart", error.response?.data);
-		toast.error(error.response?.data?.message || "An error occurred");
-	}
+        set((prevState) => {
+            const existingItem = prevState.cart.find((item) => item._id === product._id);
+            const newCart = existingItem
+                ? prevState.cart.map((item) =>
+                        item._id === product._id ? { ...item, quantity: item.quantity + 1 } : item
+                  )
+                : [...prevState.cart, { ...product, quantity: 1 }];
+            return { cart: newCart };
+        });
+        
+        get().calculateTotals();
+        
+        // Check if user should get a coupon (after cart update)
+        const { subtotal } = get();
+        if (subtotal >= 200) { // $200 threshold
+            // Fetch updated coupon from server
+            setTimeout(() => {
+                get().getMyCoupon();
+                toast.success("🎉 Congratulations! You earned a discount coupon!", {
+                    duration: 4000,
+                    style: {
+                        background: '#10B981',
+                        color: '#fff',
+                    },
+                });
+            }, 1000);
+        }
+        
+    } catch (error) {
+        console.log("❌ Error in useCartStore addToCart", error.response?.data);
+        toast.error(error.response?.data?.message || "An error occurred");
+    }
 },
 
 removeFromCart:async (productId)=> {

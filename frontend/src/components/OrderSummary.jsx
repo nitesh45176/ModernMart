@@ -19,22 +19,41 @@ const OrderSummary = () => {
 	const formattedSavings = savings.toFixed(2);
 
 	const handlePayment = async () => {
-		const stripe = await stripePromise;
-		const res = await axiosInstance.post("/payments/create-checkout-session", {
-			products: cart,
-			couponCode: coupon ? coupon.code : null,
-		});
-
-		const session = res.data;
-		const result = await stripe.redirectToCheckout({
-			sessionId: session.id,
-		});
-
-		if (result.error) {
-			console.error("Error:", result.error);
-		}
-	};
-
+    try {
+        console.log("🔍 Starting payment process...");
+        
+        // Add loading state
+        const stripe = await stripePromise;
+        console.log("✅ Stripe loaded:", !!stripe);
+        
+        if (!stripe) {
+            toast.error("Payment system not available");
+            return;
+        }
+        
+        console.log("🚀 Creating checkout session...");
+        const res = await axiosInstance.post("/payments/create-checkout-session", {
+            products: cart,
+            couponCode: coupon ? coupon.code : null,
+        });
+        
+        console.log("✅ Session created:", res.data);
+        const session = res.data;
+        
+        console.log("🔄 Redirecting to checkout...");
+        const result = await stripe.redirectToCheckout({
+            sessionId: session.id,
+        });
+        
+        if (result.error) {
+            console.error("❌ Stripe redirect error:", result.error);
+            toast.error(result.error.message || "Payment failed");
+        }
+    } catch (error) {
+        console.error("❌ Payment error:", error);
+        toast.error(error.response?.data?.error || "Payment failed");
+    }
+};
 	return (
 		<motion.div
 			className='space-y-4 rounded-lg border border-gray-700 bg-gray-800 p-4 shadow-sm sm:p-6'
