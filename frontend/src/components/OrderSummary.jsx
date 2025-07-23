@@ -18,39 +18,41 @@ const OrderSummary = () => {
 	const formattedTotal = total.toFixed(2);
 	const formattedSavings = savings.toFixed(2);
 
-	const handlePayment = async () => {
+const handlePayment = async () => {
     try {
-        console.log("🔍 Starting payment process...");
+        alert("🔍 Payment button clicked!");
         
-        // Add loading state
         const stripe = await stripePromise;
-        console.log("✅ Stripe loaded:", !!stripe);
         
         if (!stripe) {
+            alert("❌ Stripe not loaded!");
             toast.error("Payment system not available");
             return;
         }
         
-        console.log("🚀 Creating checkout session...");
+        alert("✅ Stripe loaded! Creating checkout session...");
+        
         const res = await axiosInstance.post("/payments/create-checkout-session", {
             products: cart,
             couponCode: coupon ? coupon.code : null,
         });
         
-        console.log("✅ Session created:", res.data);
-        const session = res.data;
+        alert(`✅ Session created! ID: ${res.data.id.substring(0, 20)}...`);
         
-        console.log("🔄 Redirecting to checkout...");
         const result = await stripe.redirectToCheckout({
-            sessionId: session.id,
+            sessionId: res.data.id,
         });
         
         if (result.error) {
-            console.error("❌ Stripe redirect error:", result.error);
-            toast.error(result.error.message || "Payment failed");
+            alert(`❌ Stripe redirect error: ${result.error.message}`);
+            toast.error(result.error.message);
+        } else {
+            alert("✅ Redirecting to Stripe checkout...");
         }
+        
     } catch (error) {
-        console.error("❌ Payment error:", error);
+        alert(`❌ Payment failed: ${error.message}`);
+        console.error("Payment error:", error);
         toast.error(error.response?.data?.error || "Payment failed");
     }
 };
