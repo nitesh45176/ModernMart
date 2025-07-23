@@ -4,10 +4,9 @@ import { Link } from "react-router-dom";
 import { MoveRight } from "lucide-react";
 import { loadStripe } from "@stripe/stripe-js";
 import axios from "../lib/axios";
-import axiosInstance from "../lib/axios";
 
 const stripePromise = loadStripe(
-	"pk_test_51RmD6L2XfEOjqt0gQbgzwvkhvs40m9M36eXXkWiLa1hNLJty1A5eWz3edIIefps090BhgiKJPKNiLhGy9bdxfuTz00LvCXn9VP"
+	"pk_test_51KZYccCoOZF2UhtOwdXQl3vcizup20zqKqT9hVUIsVzsdBrhqbUI2fE0ZdEVLdZfeHjeyFXtqaNsyCJCmZWnjNZa00PzMAjlcL"
 );
 
 const OrderSummary = () => {
@@ -18,44 +17,23 @@ const OrderSummary = () => {
 	const formattedTotal = total.toFixed(2);
 	const formattedSavings = savings.toFixed(2);
 
-const handlePayment = async () => {
-    try {
-        alert("🔍 Payment button clicked!");
-        
-        const stripe = await stripePromise;
-        
-        if (!stripe) {
-            alert("❌ Stripe not loaded!");
-            toast.error("Payment system not available");
-            return;
-        }
-        
-        alert("✅ Stripe loaded! Creating checkout session...");
-        
-        const res = await axiosInstance.post("/payments/create-checkout-session", {
-            products: cart,
-            couponCode: coupon ? coupon.code : null,
-        });
-        
-        alert(`✅ Session created! ID: ${res.data.id.substring(0, 20)}...`);
-        
-        const result = await stripe.redirectToCheckout({
-            sessionId: res.data.id,
-        });
-        
-        if (result.error) {
-            alert(`❌ Stripe redirect error: ${result.error.message}`);
-            toast.error(result.error.message);
-        } else {
-            alert("✅ Redirecting to Stripe checkout...");
-        }
-        
-    } catch (error) {
-        alert(`❌ Payment failed: ${error.message}`);
-        console.error("Payment error:", error);
-        toast.error(error.response?.data?.error || "Payment failed");
-    }
-};
+	const handlePayment = async () => {
+		const stripe = await stripePromise;
+		const res = await axios.post("/payments/create-checkout-session", {
+			products: cart,
+			couponCode: coupon ? coupon.code : null,
+		});
+
+		const session = res.data;
+		const result = await stripe.redirectToCheckout({
+			sessionId: session.id,
+		});
+
+		if (result.error) {
+			console.error("Error:", result.error);
+		}
+	};
+
 	return (
 		<motion.div
 			className='space-y-4 rounded-lg border border-gray-700 bg-gray-800 p-4 shadow-sm sm:p-6'
