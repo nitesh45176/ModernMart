@@ -6,7 +6,7 @@ import { loadStripe } from "@stripe/stripe-js";
 import axios from "../lib/axios";
 
 const stripePromise = loadStripe(
-	"pk_test_51KZYccCoOZF2UhtOwdXQl3vcizup20zqKqT9hVUIsVzsdBrhqbUI2fE0ZdEVLdZfeHjeyFXtqaNsyCJCmZWnjNZa00PzMAjlcL"
+	"pk_test_51RmD6L2XfEOjqt0gQbgzwvkhvs40m9M36eXXkWiLa1hNLJty1A5eWz3edIIefps090BhgiKJPKNiLhGy9bdxfuTz00LvCXn9VP"
 );
 
 const OrderSummary = () => {
@@ -18,21 +18,21 @@ const OrderSummary = () => {
 	const formattedSavings = savings.toFixed(2);
 
 	const handlePayment = async () => {
+	try {
 		const stripe = await stripePromise;
 		const res = await axios.post("/payments/create-checkout-session", {
 			products: cart,
 			couponCode: coupon ? coupon.code : null,
 		});
-
 		const session = res.data;
-		const result = await stripe.redirectToCheckout({
+		await stripe.redirectToCheckout({
 			sessionId: session.id,
 		});
+	} catch (err) {
+		console.error("🔥 Stripe session creation failed:", err.response?.data || err.message);
+	}
+};
 
-		if (result.error) {
-			console.error("Error:", result.error);
-		}
-	};
 
 	return (
 		<motion.div

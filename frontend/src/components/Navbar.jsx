@@ -23,7 +23,7 @@ useEffect(() => {
         
         {/* Logo */}
         <Link to='/' className='flex items-center gap-2 text-2xl font-bold text-emerald-400'>
-          <ModernMartLogo width={300} height={80} />
+          <ModernMartLogo width={250} height={80} />
         </Link>
 
         {/* Hamburger for mobile */}
